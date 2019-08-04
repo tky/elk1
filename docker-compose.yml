@@ -1,0 +1,38 @@
+version: '3.6'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.3.0
+    container_name: elasticsearch
+    networks: ['stack']
+    tty: true
+    ports: ['9200:9200']
+    environment:
+      - discovery.type=single-node
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.3.0
+    container_name: logstash
+    networks: ['stack']
+    tty: true
+    depends_on: ['elasticsearch']
+    ports: ['5044:5044']
+    volumes:
+      - "./pipeline:/usr/share/logstash/pipeline"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.3.0
+    container_name: kibana
+    networks: ['stack']
+    ports: ['5601:5601']
+    tty: true
+
+  nginx:
+    build:
+      context: nginx
+      dockerfile: Dockerfile
+    depends_on: ['logstash']
+    tty: true
+    networks: ['stack']
+    ports: ['80:80']
+
+networks: {stack: {}}
